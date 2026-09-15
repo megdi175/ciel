@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Météo - Suivi de Température</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Graphique interactif via Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌡️ Station Météo</h1>
+            <p>Visualisation de la température en temps réel</p>
+        </header>
+
+        <main>
+            <section class="metric-card">
+                <h2>Température Actuelle</h2>
+                <div class="temperature-display">
+                    <span id="temp-value">22.5</span>
+                    <span class="unit">°C</span>
+                </div>
+                <div class="badge">État : Normal</div>
+            </section>
+
+            <section class="chart-section">
+                <h2>Historique sur 24 heures</h2>
+                <div class="chart-box">
+                    <canvas id="tempChart"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 - Tableau de bord Température</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
