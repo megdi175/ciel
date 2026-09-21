@@ -3,56 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mesure Distance Balle - IoT</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f6f9; margin-top: 50px; }
-    .card { background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; }
-    .valeur { font-size: 52px; font-weight: bold; color: #007bff; margin: 20px 0; }
-    .unite { font-size: 24px; color: #555; }
-    .status { font-size: 13px; color: #888; margin-top: 15px; }
-  </style>
+  <title>Projet Ciel Pro - Mesure de Distance</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <div class="card">
-    <h2>Distance de la Balle</h2>
-    <div class="valeur"><span id="distance">--</span> <span class="unite">cm</span></div>
-    <div class="status" id="status">Chargement des données...</div>
+  <div class="container">
+    <header>
+      <h1>Projet Ciel Pro</h1>
+      <p class="subtitle">Supervision du Capteur de Distance</p>
+    </header>
+
+    <main class="dashboard">
+      
+      <!-- Carte Valeur Actuelle -->
+      <section class="card main-card">
+        <h2>Distance Actuelle</h2>
+        <div class="display-value">
+          <span id="current-val">--</span> <span class="unit">cm</span>
+        </div>
+        <p class="status-text" id="status-msg">Connexion au serveur...</p>
+      </section>
+
+      <!-- Carte LEDs d'état -->
+      <section class="card leds-card">
+        <h2>Indicateurs de Seuil (LEDs)</h2>
+        <div class="led-group">
+          <div class="led-container">
+            <div class="led" id="led-min"></div>
+            <span>MIN (&lt; 20 cm)</span>
+          </div>
+          <div class="led-container">
+            <div class="led" id="led-mid"></div>
+            <span>MILIEU (20-50 cm)</span>
+          </div>
+          <div class="led-container">
+            <div class="led" id="led-max"></div>
+            <span>MAX (&gt; 50 cm)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Carte Statistiques Min/Max -->
+      <section class="card stats-card">
+        <h2>Statistiques de la Session</h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Minimum</span>
+            <span class="stat-value" id="min-val">--</span> <span class="stat-unit">cm</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Maximum</span>
+            <span class="stat-value" id="max-val">--</span> <span class="stat-unit">cm</span>
+          </div>
+        </div>
+        <button id="reset-btn" onclick="resetStats()">Réinitialiser Min/Max</button>
+      </section>
+
+      <!-- Carte Graphique -->
+      <section class="card chart-card">
+        <h2>Évolution en Temps Réel</h2>
+        <div class="chart-container">
+          <canvas id="distanceChart"></canvas>
+        </div>
+      </section>
+
+    </main>
   </div>
 
-  <script>
-    // ⚠️ REMPLACEZ PAR VOTRE CHANNEL ID THINGSPEAK (ex: 2456789)
-    const CHANNEL_ID = 'VOTRE_CHANNEL_ID';
-
-    async function recupererMesure() {
-      // URL publique de l'API ThingSpeak pour lire la toute dernière valeur enregistrée
-      const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json`;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data && data.field1 !== undefined) {
-          // Affichage de la valeur
-          document.getElementById('distance').innerText = data.field1;
-          
-          // Formatage de la date/heure de la dernière mesure
-          const dateMesure = new Date(data.created_at).toLocaleTimeString();
-          document.getElementById('status').innerText = 'Dernière mise à jour : ' + dateMesure;
-        } else {
-          document.getElementById('status').innerText = 'Aucune donnée disponible';
-        }
-      } catch (error) {
-        document.getElementById('status').innerText = 'Erreur lors de la connexion au Cloud';
-      }
-    }
-
-    // Interroge ThingSpeak toutes les 15 secondes
-    setInterval(recupererMesure, 15000);
-    
-    // Premier appel immédiat au chargement de la page
-    recupererMesure();
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
