@@ -4,6 +4,7 @@ const CHANNEL_ID = '3502530';
 let minDistance = Infinity;
 let maxDistance = -Infinity;
 
+// Initialisation du graphique
 const ctx = document.getElementById('distanceChart').getContext('2d');
 const chart = new Chart(ctx, {
   type: 'line',
@@ -35,25 +36,37 @@ const chart = new Chart(ctx, {
 
 async function meuresDistance() {
   try {
-    // Interrogation de l'API ThingSpeak en HTTPS
+    // Interrogation de l'API publique de ThingSpeak
     const response = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json`);
+    
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+
     const data = await response.json();
     
-    // Traitement de la donnée reçue
-    if (data && data.field1 !== undefined) {
+    // Vérification que field1 existe et n'est pas null
+    if (data && data.field1 !== null && data.field1 !== undefined) {
       const val = parseFloat(data.field1);
-      
-      document.getElementById('current-val').innerText = val.toFixed(1);
-      
-      const dateMesure = new Date(data.created_at).toLocaleTimeString();
-      document.getElementById('status-msg').innerText = 'Dernière mise à jour : ' + dateMesure;
 
-      calculerMinMax(val);
-      mettreAJourLeds(val);
-      ajouterAuGraphique(val, dateMesure);
+      if (!isNaN(val)) {
+        // Affichage de la valeur principale
+        document.getElementById('current-val').innerText = val.toFixed(1);
+        
+        // Date de mise à jour
+        const dateMesure = data.created_at ? new Date(data.created_at).toLocaleTimeString() : new Date().toLocaleTimeString();
+        document.getElementById('status-msg').innerText = 'Dernière mise à jour : ' + dateMesure;
+
+        calculerMinMax(val);
+        mettreAJourLeds(val);
+        ajouterAuGraphique(val, dateMesure);
+      }
+    } else {
+      document.getElementById('status-msg').innerText = 'Donnée ThingSpeak vide ou indisponible';
     }
   } catch (error) {
-    document.getElementById('status-msg').innerText = 'Erreur : Impossible de joindre ThingSpeak';
+    console.error("Erreur de récupération :", error);
+    document.getElementById('status-msg').innerText = 'Erreur : Canal privé ou inaccessible';
   }
 }
 
@@ -63,16 +76,16 @@ function mettreAJourLeds(val) {
   const ledMax = document.getElementById('led-max');
 
   if (ledMin && ledMid && ledMax) {
-    ledMin.className = 'led blue';
-    ledMid.className = 'led green';
-    ledMax.className = 'led red';
+    ledMin.className = 'led';
+    ledMid.className = 'led';
+    ledMax.className = 'led';
 
     if (val < 20) {
-      ledMin.classList.add('active');
+      ledMin.classList.add('blue');
     } else if (val >= 20 && val <= 50) {
-      ledMid.classList.add('active');
+      ledMid.classList.add('green');
     } else {
-      ledMax.classList.add('active');
+      ledMax.classList.add('red');
     }
   }
 }
@@ -107,83 +120,8 @@ function ajouterAuGraphique(val, heure) {
   chart.update('none');
 }
 
-// Rafraîchissement toutes les 15 secondes (limite gratuite de ThingSpeak)
+// Rafraîchissement toutes les 15 secondes
 setInterval(meuresDistance, 15000);
 
 // Premier appel immédiat au chargement de la page
-meuresDistance();  try {
-    // 1. Requête vers ThingSpeak au lieu de 127.0.0.1
-    const response = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json`);
-    const data = await response.json();
-    
-    // 2. Traitement de la donnée reçue depuis le Cloud
-    if (data && data.field1 !== undefined) {
-      const val = parseFloat(data.field1);
-      
-      document.getElementById('current-val').innerText = val.toFixed(1);
-      
-      const dateMesure = new Date(data.created_at).toLocaleTimeString();
-      document.getElementById('status-msg').innerText = 'Dernière mise à jour : ' + dateMesure;
-
-      calculerMinMax(val);
-      mettreAJourLeds(val);
-      ajouterAuGraphique(val, dateMesure);
-    }
-  } catch (error) {
-    document.getElementById('status-msg').innerText = 'Erreur : Impossible de joindre ThingSpeak';
-  }
-}
-
-function mettreAJourLeds(val) {
-  const ledMin = document.getElementById('led-min');
-  const ledMid = document.getElementById('led-mid');
-  const ledMax = document.getElementById('led-max');
-
-  if (ledMin && ledMid && ledMax) {
-    ledMin.className = 'led blue';
-    ledMid.className = 'led green';
-    ledMax.className = 'led red';
-
-    if (val < 20) {
-      ledMin.classList.add('active');
-    } else if (val >= 20 && val <= 50) {
-      ledMid.classList.add('active');
-    } else {
-      ledMax.classList.add('active');
-    }
-  }
-}
-
-function calculerMinMax(val) {
-  if (val < minDistance) {
-    minDistance = val;
-    document.getElementById('min-val').innerText = minDistance.toFixed(1);
-  }
-  if (val > maxDistance) {
-    maxDistance = val;
-    document.getElementById('max-val').innerText = maxDistance.toFixed(1);
-  }
-}
-
-function resetStats() {
-  minDistance = Infinity;
-  maxDistance = -Infinity;
-  document.getElementById('min-val').innerText = '--';
-  document.getElementById('max-val').innerText = '--';
-}
-
-function ajouterAuGraphique(val, heure) {
-  chart.data.labels.push(heure);
-  chart.data.datasets[0].data.push(val);
-
-  while (chart.data.labels.length > 15) {
-    chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
-  }
-
-  chart.update('none');
-}
-
-// ⚠️ N'oubliez pas : ThingSpeak accepte un appel toutes les 15s sur le compte gratuit
-setInterval(meuresDistance, 15000);
 meuresDistance();
