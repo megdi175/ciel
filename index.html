@@ -1,43 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Station Météo - Suivi de Température</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Graphique interactif via Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesure Distance Balle - IoT</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f6f9; margin-top: 50px; }
+    .card { background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; }
+    .valeur { font-size: 52px; font-weight: bold; color: #007bff; margin: 20px 0; }
+    .unite { font-size: 24px; color: #555; }
+    .status { font-size: 13px; color: #888; margin-top: 15px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🌡️ Station Météo</h1>
-            <p>Visualisation de la température en temps réel</p>
-        </header>
 
-        <main>
-            <section class="metric-card">
-                <h2>Température Actuelle</h2>
-                <div class="temperature-display">
-                    <span id="temp-value">22.5</span>
-                    <span class="unit">°C</span>
-                </div>
-                <div class="badge">État : Normal</div>
-            </section>
+  <div class="card">
+    <h2>Distance de la Balle</h2>
+    <div class="valeur"><span id="distance">--</span> <span class="unite">cm</span></div>
+    <div class="status" id="status">Chargement des données...</div>
+  </div>
 
-            <section class="chart-section">
-                <h2>Historique sur 24 heures</h2>
-                <div class="chart-box">
-                    <canvas id="tempChart"></canvas>
-                </div>
-            </section>
-        </main>
+  <script>
+    // ⚠️ REMPLACEZ PAR VOTRE CHANNEL ID THINGSPEAK (ex: 2456789)
+    const CHANNEL_ID = 'VOTRE_CHANNEL_ID';
 
-        <footer>
-            <p>&copy; 2026 - Tableau de bord Température</p>
-        </footer>
-    </div>
+    async function recupererMesure() {
+      // URL publique de l'API ThingSpeak pour lire la toute dernière valeur enregistrée
+      const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json`;
 
-    <script src="script.js"></script>
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data && data.field1 !== undefined) {
+          // Affichage de la valeur
+          document.getElementById('distance').innerText = data.field1;
+          
+          // Formatage de la date/heure de la dernière mesure
+          const dateMesure = new Date(data.created_at).toLocaleTimeString();
+          document.getElementById('status').innerText = 'Dernière mise à jour : ' + dateMesure;
+        } else {
+          document.getElementById('status').innerText = 'Aucune donnée disponible';
+        }
+      } catch (error) {
+        document.getElementById('status').innerText = 'Erreur lors de la connexion au Cloud';
+      }
+    }
+
+    // Interroge ThingSpeak toutes les 15 secondes
+    setInterval(recupererMesure, 15000);
+    
+    // Premier appel immédiat au chargement de la page
+    recupererMesure();
+  </script>
+
 </body>
 </html>
