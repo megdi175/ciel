@@ -3,26 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graphique Température ESP32</title>
+    <title>Moniteur de Température ESP32</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Chargement de Chart.js -->
+    <!-- Importation de Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
     <div class="card">
-        <h1>Température ESP32 en Temps Réel</h1>
+        <h1>Température ESP32</h1>
         
         <div class="temp-display">
-            <span id="valeur-temp">--</span> °C
+            <span id="valeur-temp">--</span> <span class="unit">°C</span>
         </div>
-        
+
+        <p id="statut">Connexion en cours...</p>
+
         <div class="chart-container">
             <canvas id="tempChart"></canvas>
         </div>
-
-        <p id="statut">Connexion au serveur...</p>
     </div>
 
+    <!-- Script principal placé juste avant la fermeture du body -->
     <script src="script.js"></script>
 </body>
 </html>
