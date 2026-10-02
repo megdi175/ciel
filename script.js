@@ -2,13 +2,12 @@
 const CHANNEL_ID = '3502530';
 const READ_API_KEY = 'Q9P9X4S2A178OSAL';
 
+// URL ciblant explicitement le Field 1
 const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?api_key=${READ_API_KEY}&results=20`;
 
 let tempChart = null;
 
-// Attente du chargement complet du DOM
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialisation de Chart.js
     const canvas = document.getElementById('tempChart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -22,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: '#e74c3c',
                     backgroundColor: 'rgba(231, 76, 60, 0.2)',
                     fill: true,
-                    tension: 0.3
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
@@ -30,17 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        beginAtZero: false
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' °C';
+                            }
+                        }
                     }
                 }
             }
         });
     }
 
-    // 2. Lancement immédiat de la récupération de données
     rafraichirTemperature();
-
-    // 3. Rafraîchissement automatique toutes les 15 secondes
     setInterval(rafraichirTemperature, 15000);
 });
 
@@ -55,30 +58,40 @@ function rafraichirTemperature() {
         .then(data => {
             const feeds = data.feeds;
             if (feeds && feeds.length > 0) {
-                // Récupération de la toute dernière mesure
-                const derniereMesure = feeds[feeds.length - 1];
-                const temp = parseFloat(derniereMesure.field1).toFixed(1);
+                // Filtrer pour ne garder que les points qui contiennent une valeur valide
+                const mesuresValides = feeds.filter(f => f.field1 !== null && f.field1 !== undefined && f.field1 !== "");
 
-                // Mise à jour de la valeur affichée
-                const elTemp = document.getElementById('valeur-temp');
-                if (elTemp) elTemp.textContent = temp;
+                if (mesuresValides.length > 0) {
+                    // 1. Dernier point
+                    const derniereMesure = mesuresValides[mesuresValides.length - 1];
+                    const tempAffichee = Number(derniereMesure.field1).toFixed(1);
 
-                // Mise à jour de l'indicateur de statut
-                const elStatut = document.getElementById('statut');
-                if (elStatut) {
-                    elStatut.textContent = "Données Cloud synchronisées";
-                    elStatut.style.color = "#2ecc71";
-                }
+                    const elTemp = document.getElementById('valeur-temp');
+                    if (elTemp) elTemp.textContent = tempAffichee;
 
-                // Mise à jour du graphique
-                if (tempChart) {
-                    tempChart.data.labels = feeds.map(f => {
-                        const d = new Date(f.created_at);
-                        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    });
-                    
-                    tempChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1));
-                    tempChart.update();
+                    const elStatut = document.getElementById('statut');
+                    if (elStatut) {
+                        elStatut.textContent = "Données Cloud synchronisées";
+                        elStatut.style.color = "#2ecc71";
+                    }
+
+                    // 2. Conversion stricte des données pour Chart.js (conversion Texte -> Nombre)
+                    if (tempChart) {
+                        const heures = mesuresValides.map(f => {
+                            const d = new Date(f.created_at);
+                            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        });
+
+                        const valeurs = mesuresValides.map(f => Number(f.field1));
+
+                        // Attribution directe aux axes du graphique
+                        tempChart.data.labels = heures;
+                        tempChart.data.datasets[0].data = valeurs;
+                        
+                        // Forcer le redessin de la zone de dessin
+                        tempChart.update('none'); // Mode rapide
+                        tempChart.update();
+                    }
                 }
             }
         })
