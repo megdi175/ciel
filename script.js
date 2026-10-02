@@ -3,59 +3,44 @@ const CHANNEL_ID = '3502530';
 const READ_API_KEY = 'Q9P9X4S2A178OSAL';
 const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?api_key=${READ_API_KEY}&results=20`;
 
-const ctx = document.getElementById('tempChart').getContext('2d');
-const tempChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Température (°C)',
-            data: [],
-            borderColor: '#e74c3c',
-            backgroundColor: 'rgba(231, 76, 60, 0.2)',
-            fill: true,
-            tension: 0.3
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: false,
-                suggestedMin: 20,
-                suggestedMax: 60
-            }
-        }
-    }
-});
-
 function rafraichirTemperature() {
-    fetch(API_URL)
-        .then(response => response.json())
+    // L'ajout de Date.now() force le navigateur à contourner le cache local
+    fetch(`${API_URL}&_=${Date.now()}`, { cache: "no-store" })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             const feeds = data.feeds;
-            if (feeds.length > 0) {
-                // Récupération de la dernière mesure
+            if (feeds && feeds.length > 0) {
+                // Récupération du dernier point
                 const derniereMesure = feeds[feeds.length - 1];
                 const temp = parseFloat(derniereMesure.field1).toFixed(1);
                 
+                // Mises à jour DOM
                 document.getElementById('valeur-temp').textContent = temp;
-                document.getElementById('statut').textContent = "Données récupérées du Cloud";
+                document.getElementById('statut').textContent = "Données Cloud synchronisées";
                 document.getElementById('statut').style.color = "green";
 
-                // Reconstitution du graphique avec les 20 derniers points du Cloud
-                tempChart.data.labels = feeds.map(f => new Date(f.created_at).toLocaleTimeString());
-                tempChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1));
-                tempChart.update();
+                // Mise à jour de la courbe Chart.js
+                if (typeof tempChart !== 'undefined') {
+                    tempChart.data.labels = feeds.map(f => new Date(f.created_at).toLocaleTimeString());
+                    tempChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1));
+                    tempChart.update();
+                }
             }
         })
         .catch(error => {
-            console.error('Erreur Cloud :', error);
-            document.getElementById('statut').textContent = "Erreur de connexion au Cloud";
-            document.getElementById('statut').style.color = "red";
+            console.warn('Reconnexion au Cloud en cours...', error);
+            document.getElementById('statut').textContent = "Connexion instable, nouvelle tentative...";
+            document.getElementById('statut').style.color = "orange";
         });
 }
 
-// Rafraîchissement toutes les 15 secondes
+// Intervalles de 15 secondes pour respecter le quota ThingSpeak
 setInterval(rafraichirTemperature, 15000);
+
+// Premier appel au chargement
 rafraichirTemperature();
