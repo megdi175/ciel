@@ -1,77 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projet Ciel Pro - Mesure de Distance</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphique Température ESP32</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chargement de Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
-  <div class="container">
-    <header>
-      <h1>Projet Ciel Pro</h1>
-      <p class="subtitle">Supervision du Capteur de Distance</p>
-    </header>
-
-    <main class="dashboard">
-      
-      <!-- Carte Valeur Actuelle -->
-      <section class="card main-card">
-        <h2>Distance Actuelle</h2>
-        <div class="display-value">
-          <span id="current-val">--</span> <span class="unit">cm</span>
+    <div class="card">
+        <h1>Température ESP32 en Temps Réel</h1>
+        
+        <div class="temp-display">
+            <span id="valeur-temp">--</span> °C
         </div>
-        <p class="status-text" id="status-msg">Connexion au serveur...</p>
-      </section>
-
-      <!-- Carte LEDs d'état -->
-      <section class="card leds-card">
-        <h2>Indicateurs de Seuil (LEDs)</h2>
-        <div class="led-group">
-          <div class="led-container">
-            <div class="led" id="led-min"></div>
-            <span>MIN (&lt; 20 cm)</span>
-          </div>
-          <div class="led-container">
-            <div class="led" id="led-mid"></div>
-            <span>MILIEU (20-50 cm)</span>
-          </div>
-          <div class="led-container">
-            <div class="led" id="led-max"></div>
-            <span>MAX (&gt; 50 cm)</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Carte Statistiques Min/Max -->
-      <section class="card stats-card">
-        <h2>Statistiques de la Session</h2>
-        <div class="stats-grid">
-          <div class="stat-box">
-            <span class="stat-label">Minimum</span>
-            <span class="stat-value" id="min-val">--</span> <span class="stat-unit">cm</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">Maximum</span>
-            <span class="stat-value" id="max-val">--</span> <span class="stat-unit">cm</span>
-          </div>
-        </div>
-        <button id="reset-btn" onclick="resetStats()">Réinitialiser Min/Max</button>
-      </section>
-
-      <!-- Carte Graphique -->
-      <section class="card chart-card">
-        <h2>Évolution en Temps Réel</h2>
+        
         <div class="chart-container">
-          <canvas id="distanceChart"></canvas>
+            <canvas id="tempChart"></canvas>
         </div>
-      </section>
 
-    </main>
-  </div>
+        <p id="statut">Connexion au serveur...</p>
+    </div>
 
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
