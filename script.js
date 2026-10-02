@@ -1,25 +1,66 @@
-// ⚠️ CETTE LIGNE EST OBLIGATOIRE EN HAUT DU FICHIER :
-const CHANNEL_ID = '2893891'; // <--- Remplacez par VOTRE numéro de canal ThingSpeak
-const READ_API_KEY = 'Q9P9X4S2A178OSAL';
+const API_URL = 'http://127.0.0.1:5000/distance';
 
-async function meuresDistance() {
-  try {
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json?api_key=${READ_API_KEY}`;
-    const reponse = await fetch(url);
-    const data = await reponse.json();
-
-    if (data && data.field1 !== null) {
-      console.log("Mesure :", data.field1);
-      const elem = document.getElementById('distance');
-      if (elem) {
-        elem.innerText = data.field1 + " cm";
-      }
+// Initialisation du graphique Chart.js
+const ctx = document.getElementById('tempChart').getContext('2d');
+const tempChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [], // Les heures des relevés
+        datasets: [{
+            label: 'Température (°C)',
+            data: [], // Les valeurs de température
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.2)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: false,
+                suggestedMin: 20,
+                suggestedMax: 60
+            }
+        }
     }
-  } catch (erreur) {
-    console.error("Erreur :", erreur);
-  }
+});
+
+function rafraichirTemperature() {
+    fetch(API_URL)
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            return response.json();
+        })
+        .then(data => {
+            const temp = data.distance;
+            const tempsActuel = new Date().toLocaleTimeString();
+
+            // Mise à jour du texte
+            document.getElementById('valeur-temp').textContent = temp;
+            document.getElementById('statut').textContent = "Données reçues en temps réel";
+            document.getElementById('statut').style.color = "green";
+
+            // Ajout des données au graphique
+            tempChart.data.labels.push(tempsActuel);
+            tempChart.data.datasets[0].data.push(temp);
+
+            // Conserver uniquement les 20 derniers points
+            if (tempChart.data.labels.length > 20) {
+                tempChart.data.labels.shift();
+                tempChart.data.datasets[0].data.shift();
+            }
+
+            tempChart.update();
+        })
+        .catch(error => {
+            console.error('Erreur :', error);
+            document.getElementById('statut').textContent = "Erreur de connexion au serveur Python";
+            document.getElementById('statut').style.color = "red";
+        });
 }
 
-// Exécution immédiate puis toutes les 15 secondes
-meuresDistance();
-setInterval(meuresDistance, 15000);
+// Rafraîchissement toutes les 2 secondes
+setInterval(rafraichirTemperature, 2000);
+rafraichirTemperature();
