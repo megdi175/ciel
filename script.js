@@ -1,6 +1,6 @@
 // Remplacez CHANNEL_ID et READ_API_KEY par vos valeurs ThingSpeak
-const CHANNEL_ID = 'VOTRE_CHANNEL_ID';
-const READ_API_KEY = 'VOTRE_READ_API_KEY';
+const CHANNEL_ID = '3502530';
+const READ_API_KEY = 'Q9P9X4S2A178OSAL';
 const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?api_key=${READ_API_KEY}&results=20`;
 
 const ctx = document.getElementById('tempChart').getContext('2d');
