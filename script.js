@@ -62,12 +62,8 @@ function rafraichirTemperature() {
             }
         })
         .catch(error => {
-            console.error('Erreur :', error);
-            const elStatut = document.getElementById('statut');
-            if (elStatut) {
-                elStatut.textContent = "Erreur de chargement des données";
-                elStatut.style.color = "red";
-            }
+          document.getElementById('statut').textContent = "Erreur : " + error.message;
+            document.getElementById('statut').style.color = "red";
         });
 }
 
