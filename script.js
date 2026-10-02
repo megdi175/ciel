@@ -2,7 +2,7 @@
 const CHANNEL_ID = '3502530';
 const READ_API_KEY = 'Q9P9X4S2A178OSAL';
 
-const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?results=20`;
+const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?api_key=${READ_API_KEY}&results=20`;
 
 // Initialisation du graphique Chart.js
 const ctx = document.getElementById('tempChart').getContext('2d');
