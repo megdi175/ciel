@@ -2,12 +2,13 @@
 const CHANNEL_ID = '3502530';
 const READ_API_KEY = 'Q9P9X4S2A178OSAL';
 
-// URL pour récupérer les 20 dernières mesures
+// URL pour récupérer les 20 dernières mesures sur le Field 1
 const API_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1.json?api_key=${READ_API_KEY}&results=20`;
 
 let tempChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialisation du graphique Chart.js
     const canvas = document.getElementById('tempChart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -40,25 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Premier appel au chargement
     rafraichirTemperature();
-    // ThingSpeak limite les requêtes gratuites : rafraîchissement toutes les 15 secondes
+    
+    // Rafraîchissement toutes les 15 secondes (délai ThingSpeak)
     setInterval(rafraichirTemperature, 15000);
 });
 
 function rafraichirTemperature() {
     fetch(`${API_URL}&_=${Date.now()}`)
         .then(response => {
-            if (!response.ok) throw new Error(`Code HTTP ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`Code HTTP ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
             const feeds = data.feeds;
             if (feeds && feeds.length > 0) {
-                // Filtrer les entrées pour ne garder que celles avec une valeur valide
+                // Filtrer les mesures pour exclure les valeurs nuls ou vides
                 const mesuresValides = feeds.filter(f => f.field1 !== null && f.field1 !== undefined && f.field1 !== "");
 
                 if (mesuresValides.length > 0) {
-                    // 1. Affichage de la dernière valeur
+                    // 1. Mise à jour de l'affichage de la dernière température
                     const derniereMesure = mesuresValides[mesuresValides.length - 1];
                     const tempAffichee = Number(derniereMesure.field1).toFixed(1);
 
@@ -67,11 +72,11 @@ function rafraichirTemperature() {
 
                     const elStatut = document.getElementById('statut');
                     if (elStatut) {
-                        elStatut.textContent = "Données Cloud ThingSpeak synchronisées";
-                        elStatut.style.color = "#2ecc71";
+                        elStatut.textContent = "Données reçues en temps réel via ThingSpeak";
+                        elStatut.style.color = "green";
                     }
 
-                    // 2. Mise à jour du graphique
+                    // 2. Mise à jour des points et tracé du graphique
                     if (tempChart) {
                         const heures = mesuresValides.map(f => {
                             const d = new Date(f.created_at);
@@ -82,22 +87,23 @@ function rafraichirTemperature() {
 
                         tempChart.data.labels = heures;
                         tempChart.data.datasets[0].data = valeurs;
-                        tempChart.update();
+                        tempChart.update(); // Redessine le graphique
                     }
                 } else {
                     const elStatut = document.getElementById('statut');
                     if (elStatut) {
-                        elStatut.textContent = "Canal ThingSpeak vide : en attente de données...";
-                        elStatut.style.color = "#e67e22";
+                        elStatut.textContent = "Canal vide : en attente de données...";
+                        elStatut.style.color = "orange";
                     }
                 }
             }
         })
         .catch(error => {
+            console.error('Erreur :', error);
             const elStatut = document.getElementById('statut');
             if (elStatut) {
-                elStatut.textContent = "Erreur : " + error.message;
-                elStatut.style.color = "#e74c3c";
+                elStatut.textContent = "Erreur de connexion à ThingSpeak";
+                elStatut.style.color = "red";
             }
         });
 }
